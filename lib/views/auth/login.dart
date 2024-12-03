@@ -1,20 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Auth Hub',
-      home: LoginPage(),
-    );
-  }
-}
 
 class LoginPage extends StatefulWidget {
   @override
@@ -22,83 +6,122 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
-
-  Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final url = Uri.parse('http://localhost:3000/api/auth');
-    final response = await http.post(
-      url,
-      body: jsonEncode({
-        'email': _emailController.text,
-        'password': _passwordController.text,
-      }),
-      headers: {'Content-Type': 'application/json'},
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      // Handle the successful login response
-      print('Login successful: ${data['message']}');
-      print('Access token: ${data['data']['accessToken']}');
-      print('Refresh token: ${data['data']['refreshToken']}');
-      print('User details: ${data['data']['user']}');
-    } else {
-      // Handle the login error
-      print('Login failed: ${response.statusCode} - ${response.body}');
-    }
-
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/logo.png', width: 100, height: 100),
-              SizedBox(height: 16.0),
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  hintText: 'Email',
-                  border: OutlineInputBorder(),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Menambahkan gambar di bagian atas
+                Image.asset(
+                  'lib/assets/logo.png', // Pastikan gambar ada di folder assets
+                  height: 50,
                 ),
-              ),
-              SizedBox(height: 16.0),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: 'Password',
-                  border: OutlineInputBorder(),
+                SizedBox(height: 50),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withOpacity(0.7),
+                        spreadRadius: 2,
+                        blurRadius: 15,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        TextField(
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            labelStyle: TextStyle(color: Colors.white),
+                            filled: true,
+                            fillColor: Colors.grey[900],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Colors.orangeAccent,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        SizedBox(height: 16),
+                        TextField(
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: 'Password',
+                            labelStyle: TextStyle(color: Colors.white),
+                            filled: true,
+                            fillColor: Colors.grey[900],
+                            suffixIcon: Icon(
+                              Icons.visibility_off,
+                              color: Colors.white54,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Colors.orangeAccent,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              'Login',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            "Don't have an account? Create here",
+                            style: TextStyle(
+                              color: Colors.white54,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size.fromHeight(50),
-                ),
-                child: _isLoading
-                    ? CircularProgressIndicator()
-                    : Text('Login'),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+void main() {
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: LoginPage(),
+  ));
 }
