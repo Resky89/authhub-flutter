@@ -10,6 +10,10 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   String? _selectedGender;
 
+  // Tambahkan variabel untuk mengatur visibilitas password
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,9 +88,18 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 20),
                     _buildTextField('Email'),
                     const SizedBox(height: 20),
-                    _buildPasswordField('Password'),
+                    _buildPasswordField('Password', _isPasswordVisible, (bool isVisible) {
+                      setState(() {
+                        _isPasswordVisible = isVisible;
+                      });
+                    }),
                     const SizedBox(height: 20),
-                    _buildPasswordField('Confirm Password'),
+                    _buildPasswordField('Confirm Password', _isConfirmPasswordVisible,
+                        (bool isVisible) {
+                      setState(() {
+                        _isConfirmPasswordVisible = isVisible;
+                      });
+                    }),
                     const SizedBox(height: 30),
                     // Register Button
                     SizedBox(
@@ -162,14 +175,23 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildPasswordField(String label) {
+  Widget _buildPasswordField(
+      String label, bool isVisible, void Function(bool) onVisibilityChanged) {
     return TextField(
-      obscureText: true,
+      obscureText: !isVisible,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white54),
-        suffixIcon: const Icon(Icons.visibility, color: Colors.white54),
+        suffixIcon: IconButton(
+          icon: Icon(
+            isVisible ? Icons.visibility : Icons.visibility_off,
+            color: Colors.white54,
+          ),
+          onPressed: () {
+            onVisibilityChanged(!isVisible);
+          },
+        ),
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.orange),
           borderRadius: BorderRadius.circular(8),
