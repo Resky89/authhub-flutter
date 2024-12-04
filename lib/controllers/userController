@@ -1,0 +1,108 @@
+// lib/controllers/userController.dart
+
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/material.dart';
+import '../models/userModel.dart';
+import '../views/auth/login.dart';
+
+
+class UserController {
+  static const String baseUrl =
+      'https://d444-182-253-176-172.ngrok-free.app/api/user-user';
+  static const String refreshTokenUrl =
+      'https://d444-182-253-176-172.ngrok-free.app/api/auth/refresh-token';
+  static final FlutterSecureStorage _storage = FlutterSecureStorage();
+
+  // Function to get the user of the user
+  static Future<UserModel?> getUser(BuildContext context) async {
+    try {
+      String? accessToken = await _storage.read(key: 'accessToken');
+      if (accessToken == null) {
+        throw Exception('Access token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse(baseUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        if (data['status'] == true) {
+          return UserModel.fromJson(data);
+        } else {
+          throw Exception('Failed to fetch user');
+        }
+      } else if (response.statusCode == 401) {
+        // Token expired or invalid, attempt to refresh the token
+        final newAccessToken = await _refreshAccessToken();
+        if (newAccessToken != null) {
+          return await getUser(
+              context); // Retry fetching the user with new access token
+        } else {
+          throw Exception('Failed to refresh token');
+        }
+      } else if (response.statusCode == 403) {
+        // Forbidden error, reset tokens and redirect to login page
+        await _resetTokens();
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LoginPage(),
+          ),
+          (route) => false,
+        );
+        throw Exception('Forbidden error, redirected to login');
+      } else {
+        throw Exception('Failed to fetch user');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
+  // Function to refresh the access token using the refresh token
+  static Future<String?> _refreshAccessToken() async {
+    try {
+      String? refreshToken = await _storage.read(key: 'refreshToken');
+      if (refreshToken == null) {
+        throw Exception('Refresh token not found');
+      }
+
+      final response = await http.post(
+        Uri.parse(refreshTokenUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'refreshToken': refreshToken}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        if (data['status'] == true) {
+          // Save the new access token in secure storage
+          String newAccessToken = data['newAccessToken'];
+          await _storage.write(key: 'accessToken', value: newAccessToken);
+          return newAccessToken;
+        } else {
+          throw Exception('Failed to refresh token');
+        }
+      } else {
+        throw Exception('Failed to refresh token');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
+  // Function to reset tokens
+  static Future<void> _resetTokens() async {
+    await _storage.delete(key: 'accessToken');
+    await _storage.delete(key: 'refreshToken');
+  }
+}
